@@ -1,1 +1,1 @@
-# [CompletableFuture](CompletableFuture.md)
+# [[CompletableFuture]]
