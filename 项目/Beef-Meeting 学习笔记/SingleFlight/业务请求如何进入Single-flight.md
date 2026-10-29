@@ -21,7 +21,7 @@ InterviewAiInvoker.callAiSyncWithParameters()
 业务起始点
 
 > evalutateAnswer()要求传入参数：
-> 
+>
 > 1. sessionId，当前面试会话的ID；
 >     
 > 2. requestId，当前请求的标识，用于业务日志等上下文；
@@ -33,7 +33,6 @@ InterviewAiInvoker.callAiSyncWithParameters()
 > 5. answerContent，用户提交的回答；
 >     
 > 6. scorerAgent，评分Agent的配置信息。
->     
 
 ### evaluateAnswerByScorerAgent()
 
@@ -152,7 +151,6 @@ String workflowResponse =
 #### buildSingleFlightKey()
 
 1. 构造stage
-    
 
 ```Java
 // 如果stage为null,使用默认字符"interview-default"
@@ -166,7 +164,6 @@ String safeStage =
 ```
 
 2. 对sessionId做归一化
-    
 
 ```Java
 // trimToEmpty：去掉字符串首尾空白
@@ -179,7 +176,6 @@ String safeQuestionNumber = StrUtil.blankToDefault(
 ```
 
 3. 对`questionNumber`做同样的处理
-    
 
 ```Java
 String safeQuestionNumber =
@@ -190,7 +186,6 @@ String safeQuestionNumber =
 ```
 
 4. `answerContent`不直接放Key
-    
 
 ```Java
 String safeAnswerHash =
@@ -229,7 +224,6 @@ answer = "Java 是……"
 两个请求answerHash相同，所以他们的Single-flight Key相同
 
 5. 为什么Single-flight Key不加入`requestId`
-    
 
 Key更关注“业务上是不是同一个评分任务”，而不是“是不是同一个HTTP请求”
 
@@ -255,29 +249,29 @@ return guardedCall(
 ```
 
 > **Callable与Supplier的区别**
-> 
+>
 > Supplier
-> 
+>
 > ```Java
 > @FunctionalInterface
 > public interface Supplier<T> {
 >     T get();
 > }
 > ```
-> 
+>
 > Callable
-> 
+>
 > ```Java
 > @FunctionalInterface
 > public interface Callable<V> {
 >     V call() throws Exception;
 > }
 > ```
-> 
+>
 > Callable适合包装“可能抛Exception的操作”，Supplier不能声明抛出受检异常。
 
 > `doChat()`在做什么？
-> 
+>
 > ```Java
 > private String doChat(
 >     String input,
@@ -287,15 +281,15 @@ return guardedCall(
 >     Map<String, Object> parameters
 > ) throws Exception {
 > ```
-> 
+>
 > 调用
-> 
+>
 > ```Java
 > xingChenAIClient.chat(...)
 > ```
-> 
+>
 > 最终：
-> 
+>
 > ```Plain
 > doChat()
 >     ↓
@@ -303,7 +297,7 @@ return guardedCall(
 >     ↓
 > 第三方星辰 AI
 > ```
-> 
+>
 > 最终会得到完整AI响应字符串。
 
 #### guardedCall()
