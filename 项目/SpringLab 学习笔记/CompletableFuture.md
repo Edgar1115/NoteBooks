@@ -8,6 +8,6 @@ ExecutorService executor = Executors.newSingleThreadExecutor(
 );
 ```
 
->[[复习 Lambda 表达式.md|复习 Lambda 表达式]]
+>[[复习 Lambda 表达式]]
 > 
->[[为什么这里是 task -> new Thread(task, "ai-worker").md|为什么这里是 task -> new Thread(task, "ai-worker")]]
+>[[为什么这里是 task -> new Thread(task, "ai-worker")]]
