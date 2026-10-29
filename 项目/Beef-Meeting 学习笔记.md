@@ -1,1 +1,1 @@
-[[SingleFlight]]
+[SingleFlight](SingleFlight)
