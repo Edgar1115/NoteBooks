@@ -1,3 +1,5 @@
+# SingleFlight
+
 > 多个相同的 AI 请求同时到来时，尽量只让一个 Owner 真正执行 AI，其他请求等待或复用结果；即使系统有多个 JVM，也通过 Redis 协调 Owner 身份、接管、心跳和结果回放。
 
 第一节 [业务请求如何进入Single-flight](<./SingleFlight/业务请求如何进入Single-flight.md>) 完成了:

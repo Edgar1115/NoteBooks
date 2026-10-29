@@ -1,4 +1,5 @@
-# 普通 Java 方法
+# 复习Lambda 表达式
+## 普通 Java 方法
 
 ```Java
 public int add(int a, int b) {
@@ -19,7 +20,7 @@ b = 20
 return 30
 ```
 
-# Lambda
+## Lambda
 > 在 Java 中，Lambda 表达式可以用来简洁地实现函数式接口的抽象方法。
 
 看一个函数式接口：
@@ -36,7 +37,7 @@ public interface Calculator {
 int add(int a, int b);
 ```
 于是可以使用 Lambda 表达式实现这个接口。
-## 不使用 Lambda
+### 不使用 Lambda
 ```Java
 Calculator calculator = new Calculator() {
 
@@ -47,12 +48,12 @@ Calculator calculator = new Calculator() {
 
 };
 ```
-## 使用 Lambda
+### 使用 Lambda
 ```Java
 Calculator calculator = (a, b) -> a + b;
 ```
 
-## Lambda 不需要声明参数类型
+### Lambda 不需要声明参数类型
 回到这个接口：
 
 ```Java
@@ -92,7 +93,7 @@ Calculator calculator = (int a, int b) -> a + b;
 
 Java 编译器会根据上下文推断类型。
 
-## Lambda 参数由谁传入？
+### Lambda 参数由谁传入？
 
 由上例，我们已经定义好了：
 ```Java

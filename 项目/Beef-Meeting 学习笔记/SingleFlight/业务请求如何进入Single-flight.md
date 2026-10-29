@@ -1,3 +1,5 @@
+# 业务请求如何进入Single-flight
+
 评分过程大致经过：
 
 ```Plain
@@ -14,7 +16,7 @@ InterviewAiInvoker.callAiSyncWithParameters()
 
 ---
 
-# evaluateAnswer()
+## evaluateAnswer()
 
 业务起始点
 
@@ -33,7 +35,7 @@ InterviewAiInvoker.callAiSyncWithParameters()
 > 6. scorerAgent，评分Agent的配置信息。
 >     
 
-## evaluateAnswerByScorerAgent()
+### evaluateAnswerByScorerAgent()
 
 > 优先评分工作流
 
@@ -114,7 +116,7 @@ private Map<String, Object> buildScorerWorkflowParameters(
 
 > 这里只是在准备参数，没有调用AI
 
-## 进入`InterviewAiInvoker`
+### 进入`InterviewAiInvoker`
 
 ```Java
 String workflowResponse =
@@ -147,7 +149,7 @@ String workflowResponse =
     );
 ```
 
-### buildSingleFlightKey()
+#### buildSingleFlightKey()
 
 1. 构造stage
     
@@ -231,7 +233,7 @@ answer = "Java 是……"
 
 Key更关注“业务上是不是同一个评分任务”，而不是“是不是同一个HTTP请求”
 
-### callAiSyncWithParameters()
+#### callAiSyncWithParameters()
 
 第一次出现“延迟执行”
 
@@ -304,7 +306,7 @@ return guardedCall(
 > 
 > 最终会得到完整AI响应字符串。
 
-### guardedCall()
+#### guardedCall()
 
 guardedCall()构造，可见传入的是Callable
 

@@ -1,3 +1,5 @@
+# 为什么这里是 task -> new Thread(task, "ai-worker")
+
 `ThreadFactory`是一个函数式接口：
 
 ```Java
