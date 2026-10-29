@@ -1,0 +1,9 @@
+.obsidian/
+
+.trash/
+.DS_Store
+
+.env
+.env.*
+
+/copilot/
