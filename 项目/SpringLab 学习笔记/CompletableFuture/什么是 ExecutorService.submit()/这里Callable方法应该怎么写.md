@@ -93,6 +93,6 @@ Q2:  `Future<Integer> future = executor.submit(task);` 这里把 task 放进去�
 
 A2: 调用 `executor.submit(task)` 后，任务就已经提交给线程池，线程池会自动调用 `task.call()`，不需要手动调用。什么时候执行由线程池和操作系统的线程调度决定。
 
-Q3: 当我调用 future.get()，如果这个时候 submit 没有执行，会发生阻塞对吧？阻塞是future.get()后的代码都不执行了吗？
+Q3: 当我调用 future.get()，如果这个时候 submit 没有执行，会发生阻塞对吧？阻塞是future.get()后的代码都不执行了吗？ ^271855
 
 A3: **如果调用 `future.get()` 的时候，对应的任务还没有执行完，那么当前调用 `get()` 的线程就会阻塞**。但不影响其他线程。
