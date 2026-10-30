@@ -44,7 +44,7 @@ Future<String> future = executor.submit(() -> {
 
 ```
 
-> [什么是 ExecutorService.submit()?](<./CompletableFuture/什么是 ExecutorService.submit()?.md>)
+> [什么是 ExecutorService.submit()](<CompletableFuture/什么是 ExecutorService.submit().md>)
 
 - `executor`：负责执行任务。
     

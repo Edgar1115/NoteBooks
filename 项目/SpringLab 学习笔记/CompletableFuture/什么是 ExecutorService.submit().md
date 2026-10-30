@@ -15,5 +15,5 @@
 | `Future<T>`        | 返回一个代表异步执行结果的对象 |
 | `<T>`              | 任务返回值的类型        |
 
-> [这里Callable方法应该怎么写](什么是%20ExecutorService.submit()?/这里Callable方法应该怎么写.md)
+> [这里Callable方法应该怎么写](什么是%20ExecutorService.submit()/这里Callable方法应该怎么写.md)
 

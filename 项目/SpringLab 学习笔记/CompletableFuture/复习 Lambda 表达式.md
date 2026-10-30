@@ -212,7 +212,7 @@ Callable<Integer> task = () -> 100;
 
 形式二：完整的方法体
 
-`Callable`[这里Callable方法应该怎么写](<./什么是 ExecutorService.submit()?/这里Callable方法应该怎么写.md>)调用：
+`Callable`[这里Callable方法应该怎么写](<什么是 ExecutorService.submit()/这里Callable方法应该怎么写.md>)调用：
 
 ```Java
 Callable<Integer> task = () -> {
