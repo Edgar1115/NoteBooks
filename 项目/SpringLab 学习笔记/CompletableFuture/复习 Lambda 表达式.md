@@ -192,7 +192,7 @@ Callable<Integer> task = () -> 100;
 
 因为 `Callable.call()` 没有参数，所以 Lambda 左边必须是 `()`。
 
-而之前看到的[为什么这里是 task -> new Thread(task, "ai-worker")](为什么这里是%20task%20->%20new%20Thread(task,%20"ai-worker").md)：
+而之前看到的[为什么这里是 task -> new Thread(task, "ai-worker")](<./为什么这里是 task -%3E new Thread(task, "ai-worker").md>)：
 
 ```Java
 task -> new Thread(task, "ai-worker")
@@ -212,7 +212,7 @@ Callable<Integer> task = () -> 100;
 
 形式二：完整的方法体
 
-`Callable`[这里Callable方法应该怎么写](什么是%20ExecutorService.submit()?/这里Callable方法应该怎么写.md)调用：
+`Callable`[这里Callable方法应该怎么写](<./什么是 ExecutorService.submit()?/这里Callable方法应该怎么写.md>)调用：
 
 ```Java
 Callable<Integer> task = () -> {
