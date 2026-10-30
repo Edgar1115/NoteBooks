@@ -132,3 +132,109 @@ b = 20
 Lambda 左边声明形参，真正执行时，调用方负责传入实参。
 
 这和普通方法的传参机制是一样的。
+
+### Lambda箭头两端
+
+基本结构：
+
+```Java
+(参数列表) -> 表达式或方法体
+```
+
+#### 箭头左端 —— 形参列表
+
+Lambda 箭头 `->` 左边就是传入的形参（形式参数）。
+
+例如：
+
+1. 一个参数
+
+```Java
+x -> x * 2
+```
+
+- 左边 `x`：形参，接收传入的值。
+    
+- 右边 `x * 2`：计算并返回结果。
+    
+
+2. 多个参数
+
+```Java
+(a, b) -> a + b
+```
+
+- 左边 `a, b`：两个形参。
+    
+- 右边 `a + b`：计算并返回结果。
+    
+
+3. 没有参数
+
+```Java
+() -> {
+    return 100;
+}
+```
+
+- 左边 `()`：表示不接收任何参数。
+    
+- 右边：方法体，返回 `100`。
+    
+
+还有一个关键点：Lambda 左边的形参类型由目标函数式接口的抽象方法决定。
+
+例如：
+
+```Java
+Callable<Integer> task = () -> 100;
+```
+
+因为 `Callable.call()` 没有参数，所以 Lambda 左边必须是 `()`。
+
+而之前看到的[为什么这里是 task -> new Thread(task, "ai-worker")](为什么这里是%20task%20->%20new%20Thread(task,%20"ai-worker").md)：
+
+```Java
+task -> new Thread(task, "ai-worker")
+```
+
+对应的是 `ThreadFactory.newThread(Runnable r)`，所以这里的 `task` 实际上是一个 `Runnable` 类型的形参。
+
+> 这里有一个问题，`FutureGetLab`里没有做实参传入，但是这里需要传入一个`Runnable`对象，问题在于，这个方法由线程池负责调用，所以在代码里没有看到哪里做了实参传入，因为当线程池创建工作线程时，会自动传入一个`Runnable`实参。
+
+#### 箭头右端 -- 表达式或完整方法体
+
+形式一：单个表达式
+
+```Java
+Callable<Integer> task = () -> 100;
+```
+
+形式二：完整的方法体
+
+`Callable`[这里Callable方法应该怎么写](什么是%20ExecutorService.submit()?/这里Callable方法应该怎么写.md)调用：
+
+```Java
+Callable<Integer> task = () -> {
+    System.out.println("执行任务");
+    return 100;
+};
+```
+
+`Function`调用：
+
+```Java
+Function<Integer, Integer> function = x -> {
+    return x * 2;
+};
+```
+
+那么返回值是谁接收？谁调用这个方法，谁就接收返回值。
+
+```Java
+Integer a = task.call();
+```
+
+```Java
+Integer result = function.apply(10);
+```
