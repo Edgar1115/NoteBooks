@@ -22,8 +22,9 @@ private final ConcurrentMap<String, FlightEntry> flights =
 >     }
 > ```
 >
-> [CompletableFuture在这个项目的应用](请求进入Single-flight后，该执行、等待还是回放？/CompletableFuture在这个项目的应用.md)
-> [什么是record](请求进入Single-flight后，该执行、等待还是回放？/什么是record.md)
+>[CompletableFuture在这个项目中的应用](请求进入Single-flight后，该执行、等待还是回放？/CompletableFutureInThisProject.md)
+>
+>[什么是record](请求进入Single-flight后，该执行、等待还是回放？/什么是record.md)
 
 ### `execute()`收到什么？
 

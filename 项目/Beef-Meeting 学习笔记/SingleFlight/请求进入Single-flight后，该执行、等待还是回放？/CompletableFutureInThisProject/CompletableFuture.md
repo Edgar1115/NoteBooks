@@ -5,18 +5,18 @@
 > 运行示例见`FutureGetLab`，结合该类理解接口`Future`。
 
 ```Java
-
 // FutureGetLab
 // 先声明一个线程
 
 ExecutorService executor = Executors.newSingleThreadExecutor(
+	// 代码 A
     task -> new Thread(task, "ai-worker")
 );
 ```
 
 >[复习 Lambda 表达式](<./CompletableFuture/复习 Lambda 表达式.md>)
 >
->[为什么这里是 task -\> new Thread(task, "ai-worker")](<./CompletableFuture/为什么这里是 task -%3E new Thread(task, "ai-worker").md>)
+>[代码 A 详解](CompletableFuture/为什么这里是%20task%20->%20new%20Thread(task,%20"ai-worker").md)
 
 ### 什么是 Future ？
 
@@ -27,29 +27,25 @@ ExecutorService executor = Executors.newSingleThreadExecutor(
 普通的同步方法，主线程需要等待 `callAI()` 执行完成，才能继续执行下一行代码：
 
 ```Java
-
 String result = callAI();
 System.out.println(result);
-
 ```
 
 如果使用线程池：
 
 ```Java
-
 Future<String> future = executor.submit(() -> {
     Thread.sleep(3000);
     return "AI回答";
 });
-
 ```
 
 > [什么是 ExecutorService.submit()](<./CompletableFuture/什么是 ExecutorService.submit().md>)
 
 - `executor`：负责执行任务。
-    
+
 - `submit()`：把任务提交给线程池。
-    
+
 - `Future<String>`：代表这个异步任务未来的执行结果。
 
 - `future`：保存返回的 `Future` 对象的引用。
@@ -352,7 +348,7 @@ Integer result = future.get();
 executor.shutdown();
 ```
 
-② `future.thenApply(...)`：当上一个 CompletableFuture 正常完成后，使用它的结果执行指定函数。
+② `future.thenApply(...)`：当上一个 CompletableFuture 正常完成后，使用它的结果执行指定函数。 ^6e80a5
 
 所以这里`future.thenApply(score -> score * 2);`相当于告诉 Java：任务 A 完成后，自动执行任务 B。
 
@@ -434,5 +430,170 @@ System.out.println(total); // 170
 
 ## CompletableFuture
 
-> 上一节已经引入了一些 `CompletableFuture` 相较于 `Future` 的优势，接下来将更系统地对 `CompletableFuture` 进行展开 j。
+> 上一节已经引入了一些 `CompletableFuture` 相较于 `Future` 的优势，接下来将更系统地对 `CompletableFuture` 进行展开 。
 
+`CompletableFuture<T>` 是一个类，它同时实现了两个接口：
+
+```Java
+public class CompletableFuture<T>
+    implements Future<T>, CompletionStage<T>
+```
+
+| 接口                     | 主要职责                     |
+| ---------------------- | ------------------------ |
+| `Future<T>`            | 表示一个未来结果，允许查询、等待和取消      |
+| `CompletionStage<T>`   | 定义任务完成后如何执行后续操作，以及如何组合任务 |
+| `CompletableFuture<T>` | 提供上述能力的具体实现，并允许主动完成结果    |
+
+在 [Future](<#^767848>) 类的时候，已经说明了，`Future`主要关注：
+
+```Java
+future.get();
+```
+
+而 `CompletableFuture` 还支持：
+
+```Java
+future.complete("结果");
+```
+
+以及：
+
+```Java
+future.thenApply(result -> result + "处理完成");
+```
+
+### 手动完成`CompletableFuture`
+
+最简单的例子：
+
+```Java
+CompletableFuture<String> future =
+    new CompletableFuture<>();
+```
+
+这里的泛型`<String>`表示 Future 正常完成后保存的结果类型是 `String`：
+
+> 执行 `new CompletableFuture<>()` 不会创建新线程，也不会自动执行任何任务。它只是创建了一个尚未完成的 Future 对象。
+
+**正常完成**：
+
+```Java
+future.complete("AI回答");
+```
+
+然后：
+
+```Java
+String result = future.get();
+```
+
+得到：
+
+```Plain
+AI回答
+```
+
+这里 `complete()` 有两个关键特性：
+
+- 把结果保存到 Future 中，让等待的线程可以获取。
+    
+- Future 一旦正常完成或异常完成，后续普通的 `complete()` 不会覆盖已有结果。
+
+`complete()` 的返回值是 `boolean`，成功让 Future 完成时返回 `true`；如果它已经完成，则返回 `false`。
+
+> [对 complete() 进一步说明](<./CompletableFuture/对 complete() 进一步说明.md>)
+
+**异常完成**：
+
+例如：
+
+```Java
+CompletableFuture<String> future =
+    new CompletableFuture<>();
+
+future.completeExceptionally(
+    new RuntimeException("AI调用失败")
+);
+```
+
+此时调用：
+
+```Java
+future.get();
+```
+
+会抛出 `ExecutionException`，其 `cause` 是刚才传入的 `RuntimeException`。
+
+> Future 完成了，不代表任务一定成功。任务可能正常完成，也可能异常完成。
+
+### 异步执行任务
+
+上述案例`new CompletableFuture<>();`本身不会启动任务。
+
+Java 提供了方法`CompletableFuture.supllyAsync()`，可以异步运行，见下例：
+
+```Java
+CompletableFuture<String> future =
+    CompletableFuture.supplyAsync(() -> {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new CompletionException(ex);
+        }
+
+        return "AI回答";
+    });
+
+System.out.println("主线程继续执行");
+
+String result = future.join();
+
+System.out.println(result);
+```
+
+默认情况下，`supplyAsync()` 使用 `ForkJoinPool.commonPool()` 执行任务；也可以显式传入自己的 `Executor`。执行流程如下：
+
+```Plain
+主线程
+  │
+  ├── supplyAsync(...)
+  │       │
+  │       └── 工作线程执行 lambda
+  │                    │
+  │                    └── return "AI回答"
+  │
+  ├── 主线程继续执行
+  │
+  └── future.join()
+             │
+             └── 获取异步计算结果
+```
+
+### 任务完成后执行下一步
+
+这是 `CompletableFuture` 相比传统 `Future` 很重要的增强。
+
+举个🌰：
+
+```Java
+CompletableFuture<Integer> future =
+    CompletableFuture.supplyAsync(() -> 10)
+        .thenApply(value -> value * 2)
+        .thenApply(value -> value + 5);
+```
+
+执行逻辑：
+
+```Plain
+supplyAsync -> 10 -> thenApply -> 20 -> thenApply -> 25
+```
+
+最终：
+
+```Java
+future.join(); // 25
+```
+
+> `thenApply(...)`：前一个任务正常完成之后，拿到它的结果，再执行这个函数。[上一节](<#^6e80a5>)已经详细展开过，这里不再继续。

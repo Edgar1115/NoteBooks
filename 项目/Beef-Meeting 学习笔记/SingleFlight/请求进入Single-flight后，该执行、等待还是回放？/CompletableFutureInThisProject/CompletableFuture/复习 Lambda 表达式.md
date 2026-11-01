@@ -192,7 +192,7 @@ Callable<Integer> task = () -> 100;
 
 因为 `Callable.call()` 没有参数，所以 Lambda 左边必须是 `()`。
 
-而之前看到的[为什么这里是 task -> new Thread(task, "ai-worker")](<./为什么这里是 task -%3E new Thread(task, "ai-worker").md>)：
+而之前看到的[为什么这里是 task -> new Thread(task, "ai-worker")](<为什么这里是 task -> new Thread(task, "ai-worker").md>)：
 
 ```Java
 task -> new Thread(task, "ai-worker")
