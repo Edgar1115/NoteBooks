@@ -11,7 +11,7 @@ private final ConcurrentMap<String, FlightEntry> flights =
 
 > InterviewAiSingleFlightService由Spring Bean管理，同一JVM，多个请求访问的是同一个flights
 
-> [什么是ConcurrentMap?](请求进入Single-flight后，该执行、等待还是回放？/什么是ConcurrentMap?.md)
+> [什么是 ConcurrentHashMap?](请求进入Single-flight后，该执行、等待还是回放？/ConcurrentHashMap.md)
 
 > FlightEntry是
 >

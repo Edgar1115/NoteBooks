@@ -2,6 +2,8 @@
 
 ## Future -- FutureGetLab
 
+^6dd2d4
+
 > 运行示例见`FutureGetLab`，结合该类理解接口`Future`。
 
 ```Java
@@ -445,7 +447,7 @@ public class CompletableFuture<T>
 | `CompletionStage<T>`   | 定义任务完成后如何执行后续操作，以及如何组合任务 |
 | `CompletableFuture<T>` | 提供上述能力的具体实现，并允许主动完成结果    |
 
-在 [Future](<#^767848>) 类的时候，已经说明了，`Future`主要关注：
+在 [Future](CompletableFuture.md#^6dd2d4) 类的时候，已经说明了，`Future`主要关注：
 
 ```Java
 future.get();
