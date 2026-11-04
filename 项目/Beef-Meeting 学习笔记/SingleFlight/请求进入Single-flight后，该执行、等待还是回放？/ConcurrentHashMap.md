@@ -65,7 +65,7 @@ map.put("李四", 200);
 
 ### ConcurrentHashMap 怎么保证线程安全？
 
-这里涉及到 Java 并发编程的一个核心概念：原子性（Atomicity）。
+这里涉及到 Java 并发编程的一个核心概念：原子性（Atomicity）。 ^6bdd87
 
 > 原子性：一个操作在并发环境中具有不可分割的特性。即一个操作即使在内部由多个步骤组成，对其他并发线程而言，也应该表现为一个不可分割的整体。
 > 
@@ -236,3 +236,71 @@ System.out.println(map.get("B")); // 200
 问题的根本原因是：`HashMap` 没有保证两个线程对同一个桶的并发修改是原子的。
 
 注意，这里的[操作](ConcurrentHashMap.md#^b04ed4)，虽然用的是 `ConcurrentHashMap`，但是同样不能保证线程安全，但是`ConcurrentHashMap`提供了将两个步骤合并成一个的原子操作`putIfAbsent()`，这里就会保证操作的原子性。
+
+### ConcurrentHashMap 提供的方法
+
+#### `.compute()`
+
+> Java 中用于原子性地计算并更新 Map 中某个 key 对应的 value 的方法。
+
+最重要的特点：多个线程同时修改同一个 key 时，`compute()` 能保证这些修改操作不会相互干扰。
+
+基本用法
+
+```Java
+public V compute(
+    K key,
+    BiFunction<? super K, ? super V, ? extends V> remappingFunction
+)
+```
+
+> `BiFunction`
+> 
+> ```Java
+> @FunctionalInterface
+public interface BiFunction<T, U, R> {
+>
+ >   R apply(T t, U u);
+>}
+> ```
+> 
+> T : 第一个输入参数的类型，对应 ? super K
+> U : 第二个输入参数的类型，对应 ? super V
+> R : 返回值的类型，对应 ? extends V
+> 
+> `BiFunction`的特点就是：接收两个参数，返回一个结果。
+> 
+> - `? super K`：允许使用 `K` 或 `K` 的父类型作为输入类型。
+>    
+> - `? super V`：允许使用 `V` 或 `V` 的父类型作为输入类型。
+>    
+> - `? extends V`：允许使用 `V` 或 `V` 的子类型作为返回类型。
+
+`compute()`里的`BiFunction`接收两个参数，返回一个结果：
+
+| 参数                  | 含义                             |
+| ------------------- | ------------------------------ |
+| `key`               | 要操作的键                          |
+| `remappingFunction` | 根据 key 和当前 value 计算新 value 的函数 |
+
+举个🌰(①)：
+
+```Java
+map.compute(key, (k, oldValue) -> {
+    return newValue;
+});
+```
+
+- `k`：当前操作的 key。
+    
+- `oldValue`：当前 key 对应的旧 value。如果 key 不存在，则为 `null`。
+    
+- `newValue`：Lambda 返回的新 value，用来更新 Map。
+
+注意：`{}`里的方法可以自己写看，但是必须符合 `BiFunction` 接口的要求。
+
+> 1. `compute()`会保证针对同一个 key 的计算与更新具有原子性。
+> 
+> 2. 不是整个 `ConcurrentHashMap` 都被锁住。底层通常使用桶级别的同步机制，哈希冲突时，其他 key 的更新也可能受到阻塞。
+>    
+> 3. 原子性保护的是 `compute()` 内部的计算和映射更新，不包括 `compute()` 返回之后执行的其他代码。
