@@ -241,6 +241,8 @@ System.out.println(map.get("B")); // 200
 
 #### `.compute()`
 
+^7395d1
+
 > Java 中用于原子性地计算并更新 Map 中某个 key 对应的 value 的方法。
 
 最重要的特点：多个线程同时修改同一个 key 时，`compute()` 能保证这些修改操作不会相互干扰。
