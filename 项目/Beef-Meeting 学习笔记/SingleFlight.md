@@ -32,4 +32,41 @@ L1 / Redis 协调 / FlightAction 分流
 
 第三节： [多JVM怎么通过Redis安全决定Owner or Follower？](<./SingleFlight/多JVM怎么通过Redis安全决定Owner or Follower？.md>)
 
+前三节串联在一起，可以用如下过程总结：
+
+```Plain
+第一节
+生成 requestKey
+包装 Supplier
+        ↓
+第二节
+executeDistributed()
+        ↓
+L1 miss
+        ↓
+acquireOrJoin()
+        ↓
+第三节
+Redis Lua
+        ↓
+检查 status
+heartbeat
+retryable
+Owner Token
+TTL
+        ↓
+返回：
+OWNER_NEW
+OWNER_TAKEOVER
+FOLLOWER_WAIT
+REPLAY_SUCCESS
+REPLAY_FAILURE
+        ↓
+parseAcquireResult()
+        ↓
+第二节 switch(Action)
+        ↓
+Owner / Follower / Replay
+```
+
 第四节： [Owner拿到资格后怎么执行，Follower又怎么等到结果？](<./SingleFlight/Owner拿到资格后怎么执行，Follower又怎么等到结果？.md>)

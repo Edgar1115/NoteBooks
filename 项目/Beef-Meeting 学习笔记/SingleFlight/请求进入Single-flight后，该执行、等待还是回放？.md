@@ -59,7 +59,7 @@ if (!Boolean.TRUE.equals(configuration.getEnable()) // getEnable()：判断单�
 
 > Q : 这里的`InterviewSingleFlightService`也启用了一个[MeterRegistry](<../../SpringLab 学习笔记/MeterRegistry.md>)，`AiCallGuardService`也启用了一个`MeterRegistry`，这里相当于是各自一个`MeterRegistry`吗？
 > 
-> A : 不是。详见[MeterRegistry](../../SpringLab%20学习笔记/MeterRegistry.md#^430ec5)
+> A : 不是。详见[MeterRegistry](<../../SpringLab 学习笔记/MeterRegistry.md#^430ec5>)
 
 #### 正常开始
 
@@ -70,7 +70,7 @@ AtomicBoolean newFlight =
 
 > [什么是 AtomicBoolean?](<./请求进入Single-flight后，该执行、等待还是回放？/AtomicBoolean.md>)
 > 
-> [这里为什么用 AtomicBoolean 而不用普通的 Boolean](请求进入Single-flight后，该执行、等待还是回放？/AtomicBoolean.md#^63813c)
+> [这里为什么用 AtomicBoolean 而不用普通的 Boolean](<./请求进入Single-flight后，该执行、等待还是回放？/AtomicBoolean.md#^63813c>)
 
 用`newFlight`记录当前这一次`execute()`的调用，是否创建了新的Flight。
 
@@ -98,7 +98,7 @@ FlightEntry entry =
     );
 ```
 
-> [.compute()的用法](请求进入Single-flight后，该执行、等待还是回放？/ConcurrentHashMap.md#^7395d1)
+> [.compute()的用法](<./请求进入Single-flight后，该执行、等待还是回放？/ConcurrentHashMap.md#^7395d1>)
 > 
 > 这里就是，如果当前 Flight 不存在，创建一个新的 Flight，并设置前面的 atomicBoolean newFlight 为 true，表示这个 Flight 是当前请求创建。即标记当前为 Leader；
 > 
@@ -338,7 +338,7 @@ StageFlightPolicy policy =
 ```
 
 先检查本地缓存，如果拿到 localReplay，直接返回：
- j
+
 ```Java
 // 检查本地缓存
 String localReplay =
@@ -354,6 +354,8 @@ if (localReplay != null) {
 }
 ```
 
+^ee47a8
+
 查本地缓存的具体流程，不访问 redis：
 
 ```Plain
@@ -366,55 +368,182 @@ if (localReplay != null) {
 直接返回
 ```
 
-### 本地 L1 缓存`FlightReplayLocalCache`
+> [FlightReplayLocalCache代码段详解](<./请求进入Single-flight后，该执行、等待还是回放？/FlightReplayLocalCache.md>)
+
+注意，`localReplay == null`只表示当前JVM 本地没有可以直接使用的成功结果，不代表 Redis 没有这个 Flight。也不能推出现在我要成为 Owner。
+
+ 当 L1 未命中时，进入共享协调，即分布式逻辑
 
 ```Java
-private final Map<String, CacheEntry> cache = new LinkedHashMap<>(128, 0.75F, true) {
-	@Override
-	protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
-		return size() > maxSize;
+// 当前时间 + Follower 最大等待时间
+long deadline  j=
+    System.currentTimeMillis()
+        + resolveFollowerMaxWaitMillis();
+
+// 记录尝试次数
+int atte jmpts = 0;
+
+while (attempts < 3) {  // 分布式协调最多允许尝试 3 次
+ 
+    attempts++;
+
+	// acquireOrJoin 会问共享 Redis，对于这个 requestKey，我当前这个节点接下来该干什么？
+    FlightAcquireResult acquireResult =
+        flightCoordinatorRepository
+            .acquireOrJoin(...);
+```
+
+`FlightAcquireResult`包含以下信息，其中`action`是当前最重要的信息：
+ 
+```Java
+FlightAction action;
+Long ownerToken;
+FlightStatus status;
+Boolean retryable;
+FlightErrorType errorType;
+String errorCode;
+```
+
+> [FlightAction 每个字段对应的状态](<./请求进入Single-flight后，该执行、等待还是回放？/FlightAction.md#^4553e2>)
+
+根据获得的`acquireResult`，进入不同的 switch 分支：
+
+```Java
+// Owner 逻辑
+case OWNER j_NEW, OWNER_TAKEOVER -> {
+    return ownerExecute(...);
+}
+
+// 成功拿到已有结果
+case REPLAY_SUCCESS -> {
+	String replay = tryReadSuccessReplay(
+		safeStage,
+		safeRequestKey,
+		policy
+	);
+	if (replay != null) {
+		return replay;
 	}
-};
+}
+
+// Follower 逻辑
+case FOLLOWER_WAIT -> {
+	String followerReplay = followerWait(
+		safeStage,
+		safeRequestKey,
+		policy,
+		deadline
+	);
+	if (followerReplay != null) {
+		return followerReplay;
+	}
+}
+
+// 失败逻辑
+case REPLAY_FAILURE ->
+    throw replayFailure(acquireResult);
 ```
 
+分布式协调尝试最多允许三次，如果三轮没有解决，抛下面异常：
+
 ```Java
-new LinkedHashMap<>(128, 0.75F, true)
+throw new CompletionException(
+    new RejectedExecutionException(
+        "distributed single-flight max attempts exceeded"
+    )
+);
 ```
+
+> 举一个[🌰](SAMPLE.md#^8fa06e)。
+
+### 分布式要分清的三个类
 
 ```Plain
-128 : 初始容量，代表 Hash 表底层桶数组的长度，每个数组位置为一个桶，即有 128 个桶
-
-0.75F : 负载因子，用于控制扩容阈值，Hash 表在存储多少元素后需要扩容
-扩容阈值 = 容量 * 负载因子
-以这里举例，初始容量为 128，负载因子为 0.75，那么扩展阈值即为 96，当插入 1~96 个元素时，不扩容，插入第 97 个元素时，即超过阈值，触发扩容，扩容一般是底层桶数组的长度翻倍。
-在负载因子为 0.75 的情况下，Hash 表通常不会等到所有桶都被占用才扩容。
-
-true : 按访问顺序排序，每次访问一个已有元素，就把它放到队伍最后面。举例：插入时顺序为 A -> B -> C，执行 get("A")，顺序就变成 B -> C -> A
+FlightMode
+FlightAction
+FlightStatus
 ```
 
-```Java
-@Override
-protected boolean removeEldestEntry(
-    Map.Entry<String, CacheEntry> eldest
-) {
-    return size() > maxSize;
-}
+`FlightMode`是当前 Single-flight 系统采用的运行模式，如下：
+
+```Plain
+LOCAL
+DISTRIBUTED
+HYBRID
 ```
 
-什么是 `removeEldestEntry()`？
+`FlightAction`是当前请求的角色： ^17f33e
 
-方法声明：
-
-```Java
-// 原始声明
-protected boolean removeEldestEntry(
-    Map.Entry<K, V> eldest
-)
+```Plain
+OWNER_NEW
+OWNER_TAKEOVER
+FOLLOWER_WAIT
+REPLAY_SUCCESS
+REPLAY_FAILURE
 ```
 
-默认实现返回 `false`，也就是说，普通的 `LinkedHashMap` 不会因为元素数量过多而自动删除元素。
+`FlightStatus`是 Redis 里的 Flight 当前处于什么生命周期:
 
-通过`@Override`重写之后，作用为：每次向 `LinkedHashMap` 插入新元素时，判断缓存中的元素数量是否超过 `maxSize`，如果超过，就自动删除最旧的元素。
+```Plain
+PENDING
+RUNNING
+SUCCEEDED
+FAILED
+...
+```
 
-注意：这个方法不是你主动调用的，而是 `LinkedHashMap` 在插入新元素后自动调用的。
+## 本节总结
 
+> 本节在研究：Single-flight 拿到第一节传来的 `key + supplier` 后，先理解单 JVM 如何通过 `ConcurrentHashMap + CompletableFuture` 合并同 Key 请求，再扩展到多 JVM，通过本地 L1 + Redis 协调结果 `FlightAction` 决定当前节点是 Owner、Follower，还是直接回放历史结果。
+
+完整调用链：
+
+```Plain
+第一节传进来：
+
+stage
+requestKey
+Supplier
+    ↓
+DistributedInterviewAiSingleFlightService.execute()
+    ↓
+判断 FlightMode
+    │
+    ├── LOCAL / distributed disabled
+    │       ↓
+    │   InterviewAiSingleFlightService
+    │       ↓
+    │   ConcurrentHashMap.compute()
+    │       │
+    │       ├── Leader
+    │       │     ↓
+    │       │ supplier.get()
+    │       │     ↓
+    │       │ future.complete(result)
+    │       │
+    │       └── Waiter
+    │             ↓
+    │         future.get()
+    │
+    └── Distributed
+            ↓
+       executeDistributed()
+            ↓
+       当前 JVM L1 Cache
+            │
+            ├── 命中
+            │     ↓
+            │   return
+            │
+            └── 未命中
+                  ↓
+             acquireOrJoin()
+                  ↓
+             FlightAction
+                  │
+      ┌───────────┼────────────┐
+      ↓           ↓            ↓
+ OWNER_*    FOLLOWER_WAIT    REPLAY_*
+      ↓           ↓            ↓
+ownerExecute  followerWait   回放/失败
+```
