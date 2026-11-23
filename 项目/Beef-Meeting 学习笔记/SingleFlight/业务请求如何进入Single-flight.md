@@ -248,6 +248,8 @@ return guardedCall(
 );
 ```
 
+^661b37
+
 > **Callable与Supplier的区别**
 >
 > Supplier
@@ -327,6 +329,8 @@ return distributedInterviewAiSingleFlightService.execute(
     )
 );
 ```
+
+^da1bae
 
 **两层Lambda的实际执行顺序**
 

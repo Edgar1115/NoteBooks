@@ -70,3 +70,6 @@ Owner / Follower / Replay
 ```
 
 第四节： [Owner拿到资格后怎么执行，Follower又怎么等到结果？](<./SingleFlight/Owner拿到资格后怎么执行，Follower又怎么等到结果？.md>)
+
+第四节回答的问题是，**Owner 已经拿到执行资格以后，具体怎么把任务跑完；Follower 又怎么等到并复用这个结果。**
+
